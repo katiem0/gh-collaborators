@@ -1,6 +1,6 @@
-# gh-environments
+# gh-collaborators
 
-A GitHub `gh` [CLI](https://cli.github.com/) extension to list environments and their associated metadata for an organization and/or specific repositories. 
+A GitHub `gh` [CLI](https://cli.github.com/) extension to list and manage repository (outside) collaborators in a given organization. 
 
 ## Installation
 
@@ -84,7 +84,7 @@ Flags:
   -t, --token string       GitHub Personal Access Token (default "gh auth token")
 ```
 
-The required  `csv` file contains the following information:
+The required  `csv` file should contain the following information:
 
 | Field Name | Description |
 |:-----------|:------------|
@@ -112,7 +112,7 @@ Flags:
 
 ```
 
-The output `csv` file contains the following information:
+The required  `csv` file should contain the following information:
 
 | Field Name | Description |
 |:-----------|:------------|
