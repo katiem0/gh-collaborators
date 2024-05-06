@@ -35,7 +35,7 @@ jobs:
           fi
           echo "PREFIX=$prefix" >> "$GITHUB_OUTPUT"
         shell: bash
-      - run: ${GITHUB_ACTION_PATH//\\//}/build_and_release.sh
+      - run: ./.github/workflows/build_and_release.sh
         env:
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_TOKEN: ${{ github.token }}
