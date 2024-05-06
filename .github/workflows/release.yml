@@ -11,4 +11,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: cli/gh-extension-precompile@v1
+      - uses: actions/setup-go@v3
+        with:
+          go-version: '1.21'
+      - name: determine_release_tag
+        run: |
+          if [ -n "$INPUT_TAG" ]; then
+            tag="$INPUT_TAG"
+          elif [[ $GITHUB_REF = refs/tags/* ]]; then
+            tag="${GITHUB_REF#refs/tags/}"
+          else
+            tag="$(git describe --tags --abbrev=0)"
+          fi
+  
+          echo "TAG=$tag" >> "$GITHUB_OUTPUT"
+        shell: bash
+      - name: determine_release_title_prefix
+        run: |
+          if [ -n "$INPUT_TITLE" ]; then
+            prefix="$INPUT_TITLE"
+          else
+            prefix="${GITHUB_REPOSITORY#*/}"
+          fi
+          echo "PREFIX=$prefix" >> "$GITHUB_OUTPUT"
+        shell: bash
+      - run: ${GITHUB_ACTION_PATH//\\//}/build_and_release.sh
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GH_RELEASE_TAG: ${{ steps.determine_release_tag.outputs.TAG }}
+          GH_RELEASE_TITLE_PREFIX: ${{ steps.determine_release_title_prefix.outputs.PREFIX }}
+        shell: bash
