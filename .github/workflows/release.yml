@@ -17,21 +17,17 @@ jobs:
       - name: determine_release_tag
         run: |
           if [[ $GITHUB_REF = refs/tags/* ]]; then
-            tag="${GITHUB_REF#refs/tags/}"
+            releaseTag="${GITHUB_REF#refs/tags/}"
           else
-            tag="$(git describe --tags --abbrev=0)"
+            releaseTag="$(git describe --tags --abbrev=0)"
           fi
-          echo "TAG=$tag" >> "$GITHUB_OUTPUT"
-          echo $tag
+          echo "TAG=$releaseTag" >> "$GITHUB_OUTPUT"
+          echo $releaseTag
       - name: determine_release_title_prefix
         run: |
           prefix="${GITHUB_REPOSITORY#*/}"
           echo "PREFIX=$prefix" >> "$GITHUB_OUTPUT"
           echo $prefix
-      - name: validate tags
-        run: |
-          echo ${{ TAG }}
-          echo ${{ PREFIX }}
       - run: ./.github/workflows/build_and_release.sh
         env:
           GITHUB_REPOSITORY: ${{ github.repository }}
