@@ -24,16 +24,9 @@ jobs:
           fi
           echo "TAG=$releaseTag" >> "$GITHUB_OUTPUT"
           echo $releaseTag
-      - name: determine release title prefix
-        id: determine_release_title_prefix
-        run: |
-          prefix="${GITHUB_REPOSITORY#*/}"
-          echo "PREFIX=$prefix" >> "$GITHUB_OUTPUT"
-          echo $prefix
       - run: ./.github/workflows/build_and_release.sh
         env:
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_TOKEN: ${{ github.token }}
           GH_RELEASE_TAG: ${{ steps.determine_release_tag.outputs.TAG }}
-          GH_RELEASE_TITLE_PREFIX: ${{ steps.determine_release_title_prefix.outputs.PREFIX }}
         shell: bash
