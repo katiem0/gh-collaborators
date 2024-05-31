@@ -23,18 +23,15 @@ jobs:
           else
             tag="$(git describe --tags --abbrev=0)"
           fi
-  
           echo "TAG=$tag" >> "$GITHUB_OUTPUT"
-        shell: bash
       - name: determine_release_title_prefix
         run: |
-          if [ -n "$INPUT_TITLE" ]; then
-            prefix="$INPUT_TITLE"
-          else
-            prefix="${GITHUB_REPOSITORY#*/}"
-          fi
+          prefix="${GITHUB_REPOSITORY#*/}"
           echo "PREFIX=$prefix" >> "$GITHUB_OUTPUT"
-        shell: bash
+      - name: validate tags
+        run: |
+          echo ${{ steps.determine_release_tag.outputs.TAG }}
+          echo ${{ steps.determine_release_title_prefix.outputs.PREFIX }}
       - run: ./.github/workflows/build_and_release.sh
         env:
           GITHUB_REPOSITORY: ${{ github.repository }}
