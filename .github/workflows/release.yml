@@ -16,22 +16,22 @@ jobs:
           go-version: '1.20'
       - name: determine_release_tag
         run: |
-          if [ -n "$INPUT_TAG" ]; then
-            tag="$INPUT_TAG"
-          elif [[ $GITHUB_REF = refs/tags/* ]]; then
+          if [[ $GITHUB_REF = refs/tags/* ]]; then
             tag="${GITHUB_REF#refs/tags/}"
           else
             tag="$(git describe --tags --abbrev=0)"
           fi
           echo "TAG=$tag" >> "$GITHUB_OUTPUT"
+          echo $tag
       - name: determine_release_title_prefix
         run: |
           prefix="${GITHUB_REPOSITORY#*/}"
           echo "PREFIX=$prefix" >> "$GITHUB_OUTPUT"
+          echo $prefix
       - name: validate tags
         run: |
-          echo ${{ steps.determine_release_tag.outputs.TAG }}
-          echo ${{ steps.determine_release_title_prefix.outputs.PREFIX }}
+          echo ${{ TAG }}
+          echo ${{ PREFIX }}
       - run: ./.github/workflows/build_and_release.sh
         env:
           GITHUB_REPOSITORY: ${{ github.repository }}
