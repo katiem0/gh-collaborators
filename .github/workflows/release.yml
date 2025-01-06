@@ -11,22 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: cli/gh-extension-precompile@v2
         with:
-          go-version: '1.20'
-      - name: determine release tag
-        id: determine_release_tag
-        run: |
-          if [[ $GITHUB_REF = refs/tags/* ]]; then
-            releaseTag="${GITHUB_REF#refs/tags/}"
-          else
-            releaseTag="$(git describe --tags --abbrev=0)"
-          fi
-          echo "TAG=$releaseTag" >> "$GITHUB_OUTPUT"
-          echo $releaseTag
-      - run: ./.github/workflows/build_and_release.sh
-        env:
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          GITHUB_TOKEN: ${{ github.token }}
-          GH_RELEASE_TAG: ${{ steps.determine_release_tag.outputs.TAG }}
-        shell: bash
+          go_version: "1.22"
