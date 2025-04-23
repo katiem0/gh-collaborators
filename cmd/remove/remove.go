@@ -107,7 +107,12 @@ func runCmdRemove(owner string, cmdFlags *cmdFlags, g *utils.APIGetter) error {
 			zap.S().Errorf("Error arose opening repository collaborators csv file")
 		}
 		// remember to close the file at the end of the program
-		defer f.Close()
+		defer func() {
+			closeErr := f.Close()
+			if closeErr != nil {
+				zap.S().Warnf("Error closing file: %v", closeErr)
+			}
+		}()
 		// read csv values using csv.Reader
 		csvReader := csv.NewReader(f)
 		collabData, err = csvReader.ReadAll()
