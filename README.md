@@ -1,12 +1,20 @@
 # gh-collaborators
 
-A GitHub `gh` [CLI](https://cli.github.com/) extension to list and manage repository (outside) collaborators in a given organization. 
+[![GitHub Release](https://img.shields.io/github/v/release/katiem0/gh-collaborators?style=flat&logo=github)](https://github.com/katiem0/gh-collaborators/releases)
+[![PR Checks](https://github.com/katiem0/gh-collaborators/actions/workflows/main.yml/badge.svg)](https://github.com/katiem0/gh-collaborators/actions/workflows/main.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Go Report Card](https://goreportcard.com/badge/github.com/katiem0/gh-collaborators)](https://goreportcard.com/report/github.com/katiem0/gh-collaborators)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/katiem0/gh-collaborators)](https://go.dev/)
+
+A GitHub `gh` [CLI](https://cli.github.com/) extension to list and manage repository (outside)
+collaborators in a given organization.
 
 ## Installation
 
 1. Install the `gh` CLI - see the [installation](https://github.com/cli/cli#installation) instructions.
 
 2. Install the extension:
+
    ```sh
    gh extension install katiem0/gh-collaborators
    ```
@@ -15,7 +23,8 @@ For more information: [`gh extension install`](https://cli.github.com/manual/gh_
 
 ## Usage
 
-The `gh-collaborators` extension supports `GitHub.com` and GitHub Enterprise Server, through the use of `--hostname` and the following commands:
+The `gh-collaborators` extension supports `GitHub.com` and GitHub Enterprise Server, through
+the use of `--hostname` and the following commands:
 
 ```sh
 $ gh collaborators -h
@@ -37,7 +46,8 @@ Use "collaborators [command] --help" for more information about a command.
 
 ### List Collaborators
 
-Repository permissions assigned to a Repository Collaborator can be listed and written to a `csv` file for an organization or specific user.
+Repository permissions assigned to a Repository Collaborator can be listed and written to a `csv`
+file for an organization or specific user.
 
 ```sh
 $ gh collaborators list -h
@@ -67,7 +77,8 @@ The output `csv` file contains the following information:
 
 ### Add Collaborators
 
-Repository permissions can be assigned to a Repository Collaborator defined in a **required** `csv` file for an organization.
+Repository permissions can be assigned to a Repository Collaborator defined in a **required**
+`csv` file for an organization.
 
 ```sh
 $ gh collaborators add -h 
@@ -94,7 +105,8 @@ The required  `csv` file should contain the following information:
 
 ### Remove Collaborators
 
-Repository permissions can be removed for a Repository Collaborator defined in a **required** `csv` file for an organization.
+Repository permissions can be removed for a Repository Collaborator defined in a **required**
+`csv` file for an organization.
 
 ```sh
 $ gh collaborators remove -h                                         
