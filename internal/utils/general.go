@@ -39,7 +39,12 @@ func (g *APIGetter) GetOrgGuestCollaborators(owner string) ([]byte, error) {
 	if err != nil {
 		log.Printf("Body read error, %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		closeErr := resp.Body.Close()
+		if closeErr != nil {
+			zap.S().Warnf("Error closing response body: %v", closeErr)
+		}
+	}()
 	responseData, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Printf("Body read error, %v", err)
@@ -78,7 +83,12 @@ func (g *APIGetter) AddRepoCollaborator(owner string, repo string, username stri
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		closeErr := resp.Body.Close()
+		if closeErr != nil {
+			zap.S().Warnf("Error closing response body: %v", closeErr)
+		}
+	}()
 	return err
 }
 
@@ -108,6 +118,11 @@ func (g *APIGetter) RemoveRepoCollaborator(owner string, repo string, username s
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		closeErr := resp.Body.Close()
+		if closeErr != nil {
+			zap.S().Warnf("Error closing response body: %v", closeErr)
+		}
+	}()
 	return err
 }
