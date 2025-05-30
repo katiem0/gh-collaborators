@@ -2,8 +2,9 @@ module github.com/katiem0/gh-collaborators
 
 go 1.23.0
 
+require github.com/cli/go-gh/v2 v2.12.1
 
-require github.com/cli/go-gh/v2 v2.12.0
+require github.com/kr/pretty v0.3.1 // indirect
 
 require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
@@ -13,7 +14,6 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/shurcooL/graphql v0.0.0-20230722043721-ed46e5a46466
