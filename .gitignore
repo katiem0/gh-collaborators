@@ -1,3 +1,5 @@
 /gh-collaborators
 /gh-collaborators.exe
 *.csv
+
+.DS_Store

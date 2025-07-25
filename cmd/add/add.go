@@ -89,7 +89,6 @@ func NewCmdAdd() *cobra.Command {
 	addCmd.PersistentFlags().StringVarP(&cmdFlags.hostname, "hostname", "", "github.com", "GitHub Enterprise Server hostname")
 	addCmd.Flags().StringVarP(&cmdFlags.fileName, "from-file", "f", "", "Path and Name of CSV file to create access from (required)")
 	addCmd.PersistentFlags().BoolVarP(&cmdFlags.debug, "debug", "d", false, "To debug logging")
-	addCmd.PersistentFlags().BoolVarP(&cmdFlags.debug, "debug", "d", false, "To debug logging")
 	err := addCmd.MarkFlagRequired("from-file")
 	if err != nil {
 		zap.S().Errorf("Error marking flag 'from-file' as required: %v", err)
