@@ -1,4 +1,4 @@
-package add
+package remove
 
 import (
 	"encoding/csv"

@@ -127,7 +127,7 @@ func runCmdAdd(owner string, cmdFlags *cmdFlags, g *utils.APIGetter) error {
 	zap.S().Debugf("Determining permissions to create")
 	for _, importRepoCollab := range importRepoCollabList {
 		zap.S().Debugf("Adding user %s to repo %s", importRepoCollab.Username, importRepoCollab.RepositoryName)
-		repoPermObject := utils.CreateRepoPermData(importRepoCollab.Permission)
+		repoPermObject := g.CreateRepoPermData(importRepoCollab.Permission)
 		assignRepo, err := json.Marshal(repoPermObject)
 
 		if err != nil {

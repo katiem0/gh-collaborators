@@ -2,9 +2,16 @@ module github.com/katiem0/gh-collaborators
 
 go 1.23.0
 
-require github.com/cli/go-gh/v2 v2.12.1
+require (
+	github.com/cli/go-gh/v2 v2.12.1
+	github.com/stretchr/testify v1.8.1
+)
 
-require github.com/kr/pretty v0.3.1 // indirect
+require (
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/kr/pretty v0.3.1 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+)
 
 require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
