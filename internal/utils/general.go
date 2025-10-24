@@ -15,7 +15,7 @@ type Getter interface {
 	AddRepoCollaborator(owner string, repo string, username string, data io.Reader) error
 	CreateRepoCollaboratorsList(filedata [][]string) []data.ImportedRepoCollab
 	CreateRepoPermData(permission string) *data.Permission
-	GetGuestCollaborators(owner string) ([]byte, error)
+	GetOrgGuestCollaborators(owner string) ([]byte, error)
 	GetOrgRepositoryPermissions(owner string, user string, endCursor *string) (*data.OrganizationUserQuery, error)
 	RemoveRepoCollaborator(owner string, repo string, username string) error
 }
@@ -26,10 +26,17 @@ type APIGetter struct {
 }
 
 func NewAPIGetter(gqlClient *api.GraphQLClient, restClient *api.RESTClient) *APIGetter {
-	return &APIGetter{
-		gqlClient:  *gqlClient,
-		restClient: *restClient,
+	getter := &APIGetter{}
+
+	if gqlClient != nil {
+		getter.gqlClient = *gqlClient
 	}
+
+	if restClient != nil {
+		getter.restClient = *restClient
+	}
+
+	return getter
 }
 
 func (g *APIGetter) GetOrgGuestCollaborators(owner string) ([]byte, error) {
@@ -69,13 +76,29 @@ func (g *APIGetter) CreateRepoCollaboratorsList(filedata [][]string) []data.Impo
 	var importRepoCollabs []data.ImportedRepoCollab
 	var repoCollab data.ImportedRepoCollab
 	for _, each := range filedata[1:] {
-		repoCollab.RepositoryName = each[0]
-		repoCollab.Username = each[1]
-		repoCollab.Permission = each[2]
+		if len(each) > 0 {
+			repoCollab.RepositoryName = each[0]
+		} else {
+			repoCollab.RepositoryName = ""
+		}
+
+		if len(each) > 1 {
+			repoCollab.Username = each[1]
+		} else {
+			repoCollab.Username = ""
+		}
+
+		if len(each) > 2 {
+			repoCollab.Permission = each[2]
+		} else {
+			repoCollab.Permission = ""
+		}
+
 		importRepoCollabs = append(importRepoCollabs, repoCollab)
 	}
 	return importRepoCollabs
 }
+
 func (g *APIGetter) AddRepoCollaborator(owner string, repo string, username string, data io.Reader) error {
 	url := fmt.Sprintf("repos/%s/%s/collaborators/%s", owner, repo, username)
 
@@ -92,7 +115,7 @@ func (g *APIGetter) AddRepoCollaborator(owner string, repo string, username stri
 	return err
 }
 
-func CreateRepoPermData(permission string) *data.Permission {
+func (g *APIGetter) CreateRepoPermData(permission string) *data.Permission {
 	s := data.Permission{
 		Permission: permission,
 	}
@@ -104,8 +127,18 @@ func (g *APIGetter) DeleteRepoCollaboratorsList(filedata [][]string) []data.Impo
 	var importRepoCollabs []data.ImportedRepoCollab
 	var repoCollab data.ImportedRepoCollab
 	for _, each := range filedata[1:] {
-		repoCollab.RepositoryName = each[0]
-		repoCollab.Username = each[1]
+		if len(each) > 0 {
+			repoCollab.RepositoryName = each[0]
+		} else {
+			repoCollab.RepositoryName = ""
+		}
+
+		if len(each) > 1 {
+			repoCollab.Username = each[1]
+		} else {
+			repoCollab.Username = ""
+		}
+
 		importRepoCollabs = append(importRepoCollabs, repoCollab)
 	}
 	return importRepoCollabs
