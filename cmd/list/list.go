@@ -3,9 +3,7 @@ package list
 import (
 	"encoding/csv"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
 	"os"
 	"strconv"
 	"time"
@@ -83,24 +81,25 @@ func NewCmdList() *cobra.Command {
 
 			owner := args[0]
 
-			if _, err := os.Stat(cmdFlags.listFile); errors.Is(err, os.ErrExist) {
-				return err
+			// Check if file exists, but don't fail if it doesn't
+			if _, err := os.Stat(cmdFlags.listFile); err == nil {
+				return fmt.Errorf("output file %s already exists", cmdFlags.listFile)
 			}
 
-			reportWriter, err := os.OpenFile(cmdFlags.listFile, os.O_WRONLY|os.O_CREATE, 0644)
+			// Create APIGetter
+			apiGetter := utils.NewAPIGetter(gqlClient, restClient)
 
-			if err != nil {
+			// Collect all data first, don't create file yet
+			if err := runCmdList(owner, &cmdFlags, apiGetter); err != nil {
 				return err
 			}
-
-			return runCmdList(owner, &cmdFlags, utils.NewAPIGetter(gqlClient, restClient), reportWriter)
+			return nil
 		},
 	}
 
 	reportFileDefault := fmt.Sprintf("RepoCollaboratorsReport-%s.csv", time.Now().Format("20060102150405"))
 
 	// Configure flags for command
-
 	listCmd.PersistentFlags().StringVarP(&cmdFlags.token, "token", "t", "", `GitHub Personal Access Token (default "gh auth token")`)
 	listCmd.PersistentFlags().StringVarP(&cmdFlags.hostname, "hostname", "", "github.com", "GitHub Enterprise Server hostname")
 	listCmd.Flags().StringVarP(&cmdFlags.listFile, "output-file", "o", reportFileDefault, "Name of file to write CSV list to")
@@ -110,12 +109,12 @@ func NewCmdList() *cobra.Command {
 	return listCmd
 }
 
-func runCmdList(owner string, cmdFlags *cmdFlags, g *utils.APIGetter, reportWriter io.Writer) error {
+func runCmdList(owner string, cmdFlags *cmdFlags, g *utils.APIGetter) error {
 	var reposCursor *string
+	var csvData [][]string
 
-	csvWriter := csv.NewWriter(reportWriter)
-
-	err := csvWriter.Write([]string{
+	// Add header to data slice
+	csvData = append(csvData, []string{
 		"RepositoryName",
 		"RepositoryID",
 		"Visibility",
@@ -123,34 +122,33 @@ func runCmdList(owner string, cmdFlags *cmdFlags, g *utils.APIGetter, reportWrit
 		"AccessLevel",
 	})
 
-	if err != nil {
-		zap.S().Error("Error raised in writing output", zap.Error(err))
-	}
-
 	zap.S().Debugf("Gathering repositories and access for %s", owner)
 	repoCollabList, err := g.GetOrgGuestCollaborators(owner)
 	if err != nil {
-		zap.S().Error("Error raised in gathering users", zap.Error(err))
+		zap.S().Errorf("Failed to get organization collaborators for '%s'", owner)
+		return err
 	}
 
 	var repoCollaborators []data.RepoCollaborators
 	err = json.Unmarshal(repoCollabList, &repoCollaborators)
 	if err != nil {
-		return err
+		zap.S().Errorf("Failed to parse collaborators data: %v", err)
+		return fmt.Errorf("failed to parse collaborators data: %w", err)
 	}
 
 	if len(cmdFlags.username) > 0 {
 		zap.S().Debugf("Checking if username %s is in list of repository collaborators", cmdFlags.username)
 		for _, repoCollab := range repoCollaborators {
 			if cmdFlags.username == repoCollab.Login {
-
 				zap.S().Debugf("Gathering repositories for specified username %s", cmdFlags.username)
 				var allRepoPerms []data.RepoInfo
 				for {
 					repoUserPermissions, err := g.GetOrgRepositoryPermissions(owner, cmdFlags.username, reposCursor)
 					if err != nil {
-						zap.S().Error("Error raised in gathering repositories and user permissions", zap.Error(err))
+						zap.S().Errorf("Failed to get repository permissions for user '%s' in organization '%s': %v", cmdFlags.username, owner, err)
+						return fmt.Errorf("failed to get repository permissions for user %s: %w", cmdFlags.username, err)
 					}
+
 					allRepoPerms = append(allRepoPerms, repoUserPermissions.Organization.Repositories.Nodes...)
 					if !repoUserPermissions.Organization.Repositories.PageInfo.HasNextPage {
 						break
@@ -159,21 +157,17 @@ func runCmdList(owner string, cmdFlags *cmdFlags, g *utils.APIGetter, reportWrit
 				}
 				for _, repo := range allRepoPerms {
 					if len(repo.Collaborators.Edges) > 0 {
-						err = csvWriter.Write([]string{
+						csvData = append(csvData, []string{
 							repo.Name,
 							strconv.Itoa(repo.DatabaseId),
 							repo.Visibility,
 							cmdFlags.username,
 							repo.Collaborators.Edges[0].Permission,
 						})
-						if err != nil {
-							zap.S().Error("Error raised in writing output", zap.Error(err))
-						}
 					}
 				}
 			}
 		}
-
 	} else {
 		for _, repoCollab := range repoCollaborators {
 			zap.S().Debugf("Gathering repositories for username %s", repoCollab.Login)
@@ -181,8 +175,10 @@ func runCmdList(owner string, cmdFlags *cmdFlags, g *utils.APIGetter, reportWrit
 			for {
 				repoUserPermissions, err := g.GetOrgRepositoryPermissions(owner, repoCollab.Login, reposCursor)
 				if err != nil {
-					zap.S().Error("Error raised in gathering repositories and user permissions", zap.Error(err))
+					zap.S().Errorf("Failed to get repository permissions for user '%s' in organization '%s': %v", repoCollab.Login, owner, err)
+					return fmt.Errorf("failed to get repository permissions for user %s: %w", repoCollab.Login, err)
 				}
+
 				allRepoPerms = append(allRepoPerms, repoUserPermissions.Organization.Repositories.Nodes...)
 				if !repoUserPermissions.Organization.Repositories.PageInfo.HasNextPage {
 					break
@@ -191,23 +187,49 @@ func runCmdList(owner string, cmdFlags *cmdFlags, g *utils.APIGetter, reportWrit
 			}
 			for _, repo := range allRepoPerms {
 				if len(repo.Collaborators.Edges) > 0 {
-					err = csvWriter.Write([]string{
+					csvData = append(csvData, []string{
 						repo.Name,
 						strconv.Itoa(repo.DatabaseId),
 						repo.Visibility,
 						repoCollab.Login,
 						repo.Collaborators.Edges[0].Permission,
 					})
-					if err != nil {
-						zap.S().Error("Error raised in writing output", zap.Error(err))
-					}
 				}
 			}
 		}
 	}
 
-	fmt.Printf("Successfully listed repository collaborator permissions for repositories in %s", owner)
-	csvWriter.Flush()
+	// Only create and write to file after all data is successfully collected
+	if len(csvData) <= 1 { // Only header, no actual data
+		return fmt.Errorf("no collaborator data found for organization %s", owner)
+	}
+
+	zap.S().Debugf("Creating output file %s", cmdFlags.listFile)
+	reportWriter, err := os.OpenFile(cmdFlags.listFile, os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to create output file: %w", err)
+	}
+	defer func() {
+		closeErr := reportWriter.Close()
+		if closeErr != nil {
+			zap.S().Warnf("Error closing file: %v", closeErr)
+		}
+	}()
+
+	csvWriter := csv.NewWriter(reportWriter)
+	defer csvWriter.Flush()
+
+	// Write all collected data to CSV
+	for _, row := range csvData {
+		err = csvWriter.Write(row)
+		if err != nil {
+			zap.S().Error("Error raised in writing output", zap.Error(err))
+			return fmt.Errorf("failed to write CSV data: %w", err)
+		}
+	}
+
+	fmt.Printf("Successfully listed repository collaborator permissions for repositories in %s\n", owner)
+	fmt.Printf("Report saved to: %s\n", cmdFlags.listFile)
 
 	return nil
 }

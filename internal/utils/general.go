@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"strings"
 
 	"github.com/cli/go-gh/v2/pkg/api"
 	"github.com/katiem0/gh-collaborators/internal/data"
@@ -44,19 +45,29 @@ func (g *APIGetter) GetOrgGuestCollaborators(owner string) ([]byte, error) {
 	zap.S().Debugf("Reading in repository collaborators from %v", url)
 	resp, err := g.restClient.Request("GET", url, nil)
 	if err != nil {
-		log.Printf("Body read error, %v", err)
-	}
-	defer func() {
-		closeErr := resp.Body.Close()
-		if closeErr != nil {
-			zap.S().Warnf("Error closing response body: %v", closeErr)
+		// Check for specific permission error
+		if strings.Contains(err.Error(), "403") && strings.Contains(err.Error(), "must be an owner") {
+			return nil, fmt.Errorf("insufficient permissions: you must be an owner of the organization '%s' to list outside collaborators", owner)
 		}
-	}()
+		zap.S().Errorf("Error making request to %s: %v", url, err)
+		return nil, err
+	}
+
+	if resp != nil && resp.Body != nil {
+		defer func() {
+			closeErr := resp.Body.Close()
+			if closeErr != nil {
+				zap.S().Warnf("Error closing response body: %v", closeErr)
+			}
+		}()
+	}
+
 	responseData, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf("Body read error, %v", err)
+		zap.S().Errorf("Body read error: %v", err)
+		return nil, err
 	}
-	return responseData, err
+	return responseData, nil
 }
 
 func (g *APIGetter) GetOrgRepositoryPermissions(owner string, user string, endCursor *string) (*data.OrganizationUserQuery, error) {
