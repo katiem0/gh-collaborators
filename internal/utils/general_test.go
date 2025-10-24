@@ -167,8 +167,12 @@ func TestAPIGetterStructure(t *testing.T) {
 	// Test that APIGetter struct exists and can be instantiated
 	getter := &APIGetter{}
 
-	if getter == nil {
-		t.Fatal("Expected APIGetter to be created, got nil")
+	if getter.gqlClient != (api.GraphQLClient{}) {
+		t.Error("Expected gqlClient to be zero value")
+	}
+
+	if getter.restClient != (api.RESTClient{}) {
+		t.Error("Expected restClient to be zero value")
 	}
 }
 

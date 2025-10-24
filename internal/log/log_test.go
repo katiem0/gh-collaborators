@@ -55,7 +55,9 @@ func TestNewLoggerConfig(t *testing.T) {
 		return
 	}
 
-	defer logger.Sync()
+	defer func() {
+		_ = logger.Sync()
+	}()
 
 	// Test that we can actually log with the created logger
 	logger.Info("test info message")

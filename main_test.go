@@ -33,11 +33,11 @@ func TestRootCommand(t *testing.T) {
 	rootCmd.SetArgs([]string{"--help"})
 	err := rootCmd.Execute()
 
-	w.Close()
+	_ = w.Close()
 	os.Stdout = old
 
 	var buf bytes.Buffer
-	io.Copy(&buf, r)
+	_, _ = io.Copy(&buf, r)
 
 	if err != nil {
 		t.Errorf("Execute() with --help returned error: %v", err)
